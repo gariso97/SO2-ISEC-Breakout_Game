@@ -543,6 +543,7 @@ DWORD WINAPI ThreadJogo(LPVOID param) {
 	if (pJogo == NULL) {
 		_tprintf(TEXT("Erro a mapear pJogo...\n"));
 	}
+
 	bd.msg.tecla = 0;
 	do {
 		pJogo->alteracoes = bd.tab.alteracoes;
