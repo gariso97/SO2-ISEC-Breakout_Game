@@ -1,0 +1,12 @@
+N Elementos: 96
+Altura da barreira: 10
+Largura da barreira: 70
+Velocidade da barreira: 10
+Posicao da barreira-X: 375
+Posicao da barreira-Y: 550
+Velocidade da bola: 5
+Dimensão da bola: 15
+Sentido da bola: 0
+Posicao da bola-X: 401
+Posicao da bola-Y: 545
+Vidas: 3
