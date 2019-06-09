@@ -18,6 +18,9 @@ typedef struct img {
 	HBITMAP logo;
 	HBITMAP vida;
 	HBITMAP go;
+	HBITMAP bonus1;
+	HBITMAP bonus2;
+	HBITMAP bonus3;
 }bipm;
 
 typedef struct JanelasHCD {
@@ -37,6 +40,9 @@ typedef struct JanelasHCD {
 	HDC JLogo;
 	HDC JVida;
 	HDC JGO;
+	HDC JBonus1;
+	HDC JBonus2;
+	HDC JBonus3;
 }hdcParaImagens;
 
 typedef struct teclas {

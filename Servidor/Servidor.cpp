@@ -3,7 +3,8 @@
 //variaveis globais do servidor
 int contador;
 int id = 0;
-int tempo = 5;
+int tempo = 5;				//milisegundos
+int tempo_de_bonus = 5000;	//milisegundos
 int flag_start = 0;
 
 //estruturas e vetores de estruturas
@@ -261,7 +262,7 @@ void cria_mapa() {
 		tipoRand = rand() % 4;
 		bd.tab.tijolos[i].tipo = tipoRand;
 		tipoRand = rand() % 1;
-		bd.tab.tijolos[i].bonus = tipoRand;
+		bd.tab.tijolos[i].bonus = 1;
 
 		bd.tab.tijolos[i].dim.larg = 50;
 		bd.tab.tijolos[i].pos.x = x;
@@ -270,6 +271,41 @@ void cria_mapa() {
 		bd.tab.tijolos[i].pos.y = y;
 		bd.tab.tijolos[i].dim.alt = 25;
 		bd.tab.tijolos[i].vida = 1;
+	}
+}
+
+void cria_bonus(posicao pos) {
+	int tipo = 0;
+	if (bd.tab.brinde.existe == 0) {
+		bd.tab.brinde.pos.x = pos.x + 25;
+		bd.tab.brinde.pos.y = pos.y + 25;
+		tipo = rand() % 2;
+		bd.tab.brinde.tipo = tipo;
+		bd.tab.brinde.existe = 1;
+	}
+}
+
+void valida_bonus() {
+	if(bd.tab.brinde.existe == 1) {
+		bd.tab.brinde.pos.y--;
+		if (bd.tab.brinde.pos.x >= bd.bar.pos.x && (bd.tab.brinde.pos.x <= bd.bar.pos.x + bd.bar.dim.larg) 
+			&& bd.tab.brinde.pos.y >= bd.bar.pos.y && (bd.tab.brinde.pos.y <= bd.bar.pos.y + bd.bar.dim.alt)) {
+			if (bd.tab.brinde.tipo == 2) {
+				if (bd.tab.vida < 4) {
+					bd.tab.vida++;
+				}
+			}
+			else if (bd.tab.brinde.tipo == 1) {
+				bd.bar.dim.larg += 20;
+			}
+			else {
+				tempo = 2;
+			}
+			bd.tab.brinde.existe = -1;
+			return;
+		}
+		if (bd.tab.brinde.pos.y < DIMMAPA_Y - 10)
+			bd.tab.brinde.existe = 0;
 	}
 }
 
@@ -304,6 +340,9 @@ void valida_pos_bola() {
 					bd.b.pos.y += bd.b.velocidade;
 					bd.b.pos.x += bd.b.velocidade;
 					bd.tab.tijolos[i].vida--;
+					if (bd.tab.tijolos[i].bonus == 1) {
+						cria_bonus(bd.tab.tijolos[i].pos);
+					}
 					return;
 				}
 			}
@@ -313,6 +352,9 @@ void valida_pos_bola() {
 					bd.b.pos.y -= bd.b.velocidade;
 					bd.b.pos.x -= bd.b.velocidade;
 					bd.tab.tijolos[i].vida--;
+					if (bd.tab.tijolos[i].bonus == 1) {
+						cria_bonus(bd.tab.tijolos[i].pos);
+					}
 					return;
 				}
 			}
@@ -345,6 +387,9 @@ void valida_pos_bola() {
 					bd.b.pos.y += bd.b.velocidade;
 					bd.b.pos.x -= bd.b.velocidade;
 					bd.tab.tijolos[i].vida--;
+					if (bd.tab.tijolos[i].bonus == 1) {
+						cria_bonus(bd.tab.tijolos[i].pos);
+					}
 					return;
 				}
 			}
@@ -354,6 +399,9 @@ void valida_pos_bola() {
 					bd.b.pos.y -= bd.b.velocidade;
 					bd.b.pos.x += bd.b.velocidade;
 					bd.tab.tijolos[i].vida--;
+					if (bd.tab.tijolos[i].bonus == 1) {
+						cria_bonus(bd.tab.tijolos[i].pos);
+					}
 					return;
 				}
 			}
@@ -393,6 +441,9 @@ void valida_pos_bola() {
 					bd.b.pos.y -= bd.b.velocidade;
 					bd.b.pos.x += bd.b.velocidade;
 					bd.tab.tijolos[i].vida--;
+					if (bd.tab.tijolos[i].bonus == 1) {
+						cria_bonus(bd.tab.tijolos[i].pos);
+					}
 					return;
 				}
 			}
@@ -402,6 +453,9 @@ void valida_pos_bola() {
 					bd.b.pos.y += bd.b.velocidade;
 					bd.b.pos.x -= bd.b.velocidade;
 					bd.tab.tijolos[i].vida--;
+					if (bd.tab.tijolos[i].bonus == 1) {
+						cria_bonus(bd.tab.tijolos[i].pos);
+					}
 					return;
 				}
 			}
@@ -454,6 +508,9 @@ void valida_pos_bola() {
 					bd.b.pos.y -= bd.b.velocidade;
 					bd.b.pos.x -= bd.b.velocidade;
 					bd.tab.tijolos[i].vida--;
+					if (bd.tab.tijolos[i].bonus == 1) {
+						cria_bonus(bd.tab.tijolos[i].pos);
+					}
 					return;
 				}
 			}
@@ -463,6 +520,9 @@ void valida_pos_bola() {
 					bd.b.pos.y += bd.b.velocidade;
 					bd.b.pos.x += bd.b.velocidade;
 					bd.tab.tijolos[i].vida--;
+					if (bd.tab.tijolos[i].bonus == 1) {
+						cria_bonus(bd.tab.tijolos[i].pos);
+					}
 					return;
 				}
 			}
@@ -550,6 +610,7 @@ DWORD WINAPI ThreadJogo(LPVOID param) {
 		pJogo->pontos = bd.tab.pontos;
 		pJogo->vida = bd.tab.vida;
 		pJogo->n_elementos = bd.tab.n_elementos;
+		pJogo->brinde = bd.tab.brinde;
 		for (int i = 0; i < bd.tab.n_elementos; i++) {
 			pJogo->tijolos[i] = bd.tab.tijolos[i];
 		}
@@ -619,26 +680,23 @@ DWORD WINAPI ThreadEnviaMSG(LPVOID param) {
 	return 0;
 }
 
-DWORD WINAPI ThreadBrindes(LPVOID param) {
-	bonus* pBrinde;
-
-	pBrinde = (bonus*)MapViewOfFile(fm.hMapFileBrinde, FILE_MAP_WRITE, 0, 0, sizeof(bonus));
-	if (pBrinde == NULL) {
-		_tprintf(TEXT("Erro a mapear pBrindes...\n"));
-	}
+void ThreadBrindes() {
 	do {
-		//  valida_barra();
-		//  /*pBarra->pos.x = bd.bar.pos.x;
-		//  pBarra->pos.y = bd.bar.pos.y;
-		//  pBarra->dim.alt = bd.bar.dim.alt;
-		//  pBarra->dim.larg = bd.bar.dim.larg;*/
-		//  SetEvent(BrindeEvent);
-		//  ResetEvent(BrindeEvent);
+		if (bd.tab.brinde.existe == 1) {
+			valida_bonus();
+		}
+		else if(bd.tab.brinde.existe == -1){
+			Sleep(tempo_de_bonus);
+			if (bd.tab.brinde.tipo == 1) {
+				bd.bar.dim.larg -= 20;
+			}
+			else {
+				tempo = 5;
+			}
+			bd.tab.brinde.existe = 0;
+		}
+		Sleep(tempo);
 	} while (1);
-
-	UnmapViewOfFile(pBrinde);
-	CloseHandle(fm.hMapFileBrinde);
-	return 0;
 }
 
 DWORD WINAPI ThreadBola(LPVOID param) {
@@ -822,16 +880,6 @@ int cria_ficheiros_mapeados_server() {
 		return -1;
 	}
 
-	fm.hMapFileBrinde = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(bonus), NomeFicheiroMapeadoBrindes);
-	if (fm.hMapFileBrinde == NULL) {
-		_tprintf(TEXT("\nErro a criar pBrinde %s na memoria Partilhada!\n"), NomeFicheiroMapeadoBrindes);
-		return -1;
-	}
-	else if (GetLastError() == ERROR_ALREADY_EXISTS) {
-		_tprintf(TEXT("\nEste  %s ja foi criado!\n"), NomeFicheiroMapeadoBrindes);
-		return -1;
-	}
-
 	fm.hMapFileBola = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(bola), NomeFicheiroMapeadoBola);
 	if (fm.hMapFileBola == NULL) {
 		_tprintf(TEXT("\nErro a criar pBola %s na memoria Partilhada!\n"), NomeFicheiroMapeadoBola);
@@ -884,12 +932,6 @@ int cria_sincronizacao_server() {
 	s.Mutex = CreateMutex(NULL, FALSE, MutexT);
 	if (s.Mutex == NULL) {
 		_tprintf(TEXT("Erro ao criar o Mutex de Mensagens!!!\n"));
-		return -1;
-	}
-
-	s.BrindeEvent = CreateEvent(NULL, TRUE, FALSE, NomeEventoBrinde);
-	if (s.BrindeEvent == NULL) {
-		_tprintf(TEXT("Erro ao criar Evento %s\n"), NomeEventoBrinde);
 		return -1;
 	}
 

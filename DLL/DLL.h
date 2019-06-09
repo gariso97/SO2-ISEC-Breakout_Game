@@ -30,7 +30,6 @@ typedef struct FicheirosMapeados {
 	HANDLE hMapFileDLL;
 	HANDLE hMapFileBola;
 	HANDLE hMapFileBarra;
-	HANDLE hMapFileBrinde;
 	HANDLE hMapFileCliente;
 	HANDLE hMapFileLogin;
 }FilesM;
@@ -42,7 +41,6 @@ typedef struct sincronizacao {
 	HANDLE msgEvent;
 	HANDLE jEvent;
 	HANDLE barraEvent;
-	HANDLE BrindeEvent;
 	HANDLE Mutex;
 }sinc;
 
@@ -73,6 +71,7 @@ typedef struct Dimensoes {
 typedef struct Brinde {
 	posicao pos;
 	int tipo;
+	int existe;
 }bonus;
 
 typedef struct ObjetoMapa {
@@ -103,6 +102,7 @@ typedef struct Pacote_Mapa {
 	int pontos;
 	int vida;
 	int n_elementos;
+	bonus brinde;
 	objeto tijolos[N_TIJOLOS];
 }mapa;
 
@@ -140,8 +140,6 @@ extern "C"
 	extern DLL_IMP_API TCHAR NomeEventoBola[];
 	extern DLL_IMP_API TCHAR NomeFicheiroMapeadoBarra[];
 	extern DLL_IMP_API TCHAR NomeEventoBarra[];
-	extern DLL_IMP_API TCHAR NomeEventoBrinde[];
-	extern DLL_IMP_API TCHAR NomeFicheiroMapeadoBrindes[];
 	extern DLL_IMP_API TCHAR NomeFicheiroMapeadoCliente[];
 	extern DLL_IMP_API TCHAR MutexT[];
 
@@ -153,6 +151,5 @@ extern "C"
 	DLL_IMP_API mapa  recebeJogo(mapa m);
 	DLL_IMP_API barra recebeBarra(barra br);
 	DLL_IMP_API bola recebeBola(bola bl);
-	DLL_IMP_API bonus recebeBrinde(bonus bon);
 	DLL_IMP_API void enviaMensagem(mensagem msg);
 }

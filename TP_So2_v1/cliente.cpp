@@ -33,7 +33,34 @@ void carregaBitMaps() {
 	bipMaps.logo = (HBITMAP)LoadImage(NULL, TEXT("../../Imagens/logo.bmp"), IMAGE_BITMAP, 150, 70, LR_LOADFROMFILE);
 	bipMaps.vida = (HBITMAP)LoadImage(NULL, TEXT("../../Imagens/vida.bmp"), IMAGE_BITMAP, 40, 50, LR_LOADFROMFILE);
 	bipMaps.go = (HBITMAP)LoadImage(NULL, TEXT("../../Imagens/gameOver.bmp"), IMAGE_BITMAP, 400, 400, LR_LOADFROMFILE);
+	bipMaps.bonus1 = (HBITMAP)LoadImage(NULL, TEXT("../../Imagens/bonus1.bmp"), IMAGE_BITMAP, 40, 40, LR_LOADFROMFILE);
+	bipMaps.bonus2 = (HBITMAP)LoadImage(NULL, TEXT("../../Imagens/bonus2.bmp"), IMAGE_BITMAP, 40, 40, LR_LOADFROMFILE);
+	bipMaps.bonus3 = (HBITMAP)LoadImage(NULL, TEXT("../../Imagens/bonus3.bmp"), IMAGE_BITMAP, 40, 40, LR_LOADFROMFILE);
 
+}
+
+void encerra_cliente() {
+	DeleteObject(hPI.JWallpaper);
+	DeleteObject(hPI.JBackground);
+	DeleteObject(hPI.JBarra);
+	DeleteObject(hPI.JBola);
+	DeleteObject(hPI.JBonus);
+	DeleteObject(hPI.JExplosao);
+	DeleteObject(hPI.JTijolo1);
+	DeleteObject(hPI.JTijolo2);
+	DeleteObject(hPI.JTijolo3);
+	DeleteObject(hPI.JTijolo4);
+	DeleteObject(hPI.JLVE);
+	DeleteObject(hPI.JLVD);
+	DeleteObject(hPI.JLH);
+	DeleteObject(hPI.JLogo);
+	DeleteObject(hPI.JVida);
+	DeleteObject(hPI.JGO);
+	DeleteObject(hPI.JBonus1);
+	DeleteObject(hPI.JBonus2);
+	DeleteObject(hPI.JBonus3);
+	DeleteDC(memdc);
+	exit(0);
 }
 
 DWORD WINAPI escutaPacote(LPVOID param) {
@@ -74,6 +101,19 @@ DWORD WINAPI escutaPacote(LPVOID param) {
 					}
 				}
 			}
+			//Imprime Brinde
+			if (bd.tab.brinde.existe == 1) {
+				if (bd.tab.brinde.tipo == 0) {
+					TransparentBlt(memdc, bd.tab.brinde.pos.x-20, bd.tab.brinde.pos.y-20, 40, 40, hPI.JBonus1, 0, 0, 40, 40, RGB(255, 255, 255));
+				}
+				else if (bd.tab.brinde.tipo == 1) {
+					TransparentBlt(memdc, bd.tab.brinde.pos.x-20, bd.tab.brinde.pos.y-20, 40, 40, hPI.JBonus2, 0, 0, 40, 40, RGB(255, 255, 255));
+				}
+				else {
+					TransparentBlt(memdc, bd.tab.brinde.pos.x-20, bd.tab.brinde.pos.y-20, 40, 40, hPI.JBonus3, 0, 0, 40, 40, RGB(255, 255, 255));
+				}
+			}
+			TransparentBlt(memdc, bd.bar.pos.x, bd.bar.pos.y - 5, 70, 50, hPI.JBarra, 0, 0, 70, 50, RGB(255, 255, 255));
 			//Imprime limites e extras
 			TransparentBlt(memdc, 0, 0, 10, DIMMAPA_Y + 10, hPI.JLVE, 0, 0, 10, DIMMAPA_Y + 10, RGB(255, 255, 255));	//limite esquerdo
 			TransparentBlt(memdc, DIMMAPA_X + 1, 0, 10, DIMMAPA_Y + 10, hPI.JLVD, 0, 0, 10, DIMMAPA_Y + 10, RGB(255, 255, 255));	//limite direito
@@ -88,7 +128,6 @@ DWORD WINAPI escutaPacote(LPVOID param) {
 				TransparentBlt(memdc, DIMMAPA_X + 15 + aux, DIMMAPA_Y - 50, 40, 50, hPI.JVida, 0, 0, 40, 50, RGB(255, 255, 255));	//vida
 				aux += 30;
 			}
-
 			//Imprime Barra
 			TransparentBlt(memdc, bd.bar.pos.x, bd.bar.pos.y - 5, 70, 50, hPI.JBarra, 0, 0, 70, 50, RGB(255, 255, 255));
 			//Imprime bola
@@ -108,24 +147,7 @@ DWORD WINAPI escutaPacote(LPVOID param) {
 					MessageBox(hWnd, TEXT("Prepar-se! O jogo vai reiniciar..."), TEXT("Espere"), MB_OK);
 				}
 				else {
-					DeleteObject(hPI.JWallpaper);
-					DeleteObject(hPI.JBackground);
-					DeleteObject(hPI.JBarra);
-					DeleteObject(hPI.JBola);
-					DeleteObject(hPI.JBonus);
-					DeleteObject(hPI.JExplosao);
-					DeleteObject(hPI.JTijolo1);
-					DeleteObject(hPI.JTijolo2);
-					DeleteObject(hPI.JTijolo3);
-					DeleteObject(hPI.JTijolo4);
-					DeleteObject(hPI.JLVE);
-					DeleteObject(hPI.JLVD);
-					DeleteObject(hPI.JLH);
-					DeleteObject(hPI.JLogo);
-					DeleteObject(hPI.JVida);
-					DeleteObject(hPI.JGO);
-					DeleteDC(memdc);
-					exit(0);
+					encerra_cliente();
 				}
 			}
 			else if (bd.tab.alteracoes == 3) {
@@ -137,24 +159,7 @@ DWORD WINAPI escutaPacote(LPVOID param) {
 					MessageBox(hWnd, TEXT("Prepar-se! O jogo vai reiniciar..."), TEXT("Espere"), MB_OK);
 				}
 				else {
-					DeleteObject(hPI.JWallpaper);
-					DeleteObject(hPI.JBackground);
-					DeleteObject(hPI.JBarra);
-					DeleteObject(hPI.JBola);
-					DeleteObject(hPI.JBonus);
-					DeleteObject(hPI.JExplosao);
-					DeleteObject(hPI.JTijolo1);
-					DeleteObject(hPI.JTijolo2);
-					DeleteObject(hPI.JTijolo3);
-					DeleteObject(hPI.JTijolo4);
-					DeleteObject(hPI.JLVE);
-					DeleteObject(hPI.JLVD);
-					DeleteObject(hPI.JLH);
-					DeleteObject(hPI.JLogo);
-					DeleteObject(hPI.JVida);
-					DeleteObject(hPI.JGO);
-					DeleteDC(memdc);
-					exit(0);
+					encerra_cliente();
 				}
 			}
 		}
@@ -246,24 +251,7 @@ LRESULT CALLBACK TrataEventos(HWND hWnd, UINT messg, WPARAM wParam, LPARAM lPara
 	case WM_CLOSE:
 		//PlaySoundA((LPCSTR) "../../Sons/inicio.wav", NULL, SND_FILENAME | SND_ASYNC);
 		if (MessageBox(hWnd, TEXT("Deseja mesmo sair?"), TEXT("Sair"), MB_YESNO | MB_ICONEXCLAMATION) == IDYES) {
-			DeleteObject(hPI.JWallpaper);
-			DeleteObject(hPI.JBackground);
-			DeleteObject(hPI.JBarra);
-			DeleteObject(hPI.JBola);
-			DeleteObject(hPI.JBonus);
-			DeleteObject(hPI.JExplosao);
-			DeleteObject(hPI.JTijolo1);
-			DeleteObject(hPI.JTijolo2);
-			DeleteObject(hPI.JTijolo3);
-			DeleteObject(hPI.JTijolo4);
-			DeleteObject(hPI.JLVE);
-			DeleteObject(hPI.JLVD);
-			DeleteObject(hPI.JLH);
-			DeleteObject(hPI.JLogo);
-			DeleteObject(hPI.JVida);
-			DeleteObject(hPI.JGO);
-			DeleteDC(memdc);
-			PostQuitMessage(0);
+			encerra_cliente();
 		}
 		break;
 	case WM_CREATE:
@@ -291,6 +279,9 @@ LRESULT CALLBACK TrataEventos(HWND hWnd, UINT messg, WPARAM wParam, LPARAM lPara
 		hPI.JLogo = CreateCompatibleDC(memdc);
 		hPI.JVida = CreateCompatibleDC(memdc);
 		hPI.JGO = CreateCompatibleDC(memdc);
+		hPI.JBonus1 = CreateCompatibleDC(memdc);
+		hPI.JBonus2 = CreateCompatibleDC(memdc);
+		hPI.JBonus3 = CreateCompatibleDC(memdc);
 
 		//colocar o bipMap para dentro do Device Contexts
 		SelectObject(hPI.JBackground, bipMaps.Background);
@@ -309,6 +300,9 @@ LRESULT CALLBACK TrataEventos(HWND hWnd, UINT messg, WPARAM wParam, LPARAM lPara
 		SelectObject(hPI.JLogo, bipMaps.logo);
 		SelectObject(hPI.JVida, bipMaps.vida);
 		SelectObject(hPI.JGO, bipMaps.go);
+		SelectObject(hPI.JBonus1, bipMaps.bonus1);
+		SelectObject(hPI.JBonus2, bipMaps.bonus2);
+		SelectObject(hPI.JBonus3, bipMaps.bonus3);
 
 		PatBlt(memdc, 0, 0, DIMMAPA_X + 200, DIMMAPA_Y + 100, PATCOPY);  //cria uma copia
 		ReleaseDC(hWnd, hdc);
@@ -343,24 +337,7 @@ LRESULT CALLBACK TrataEventos(HWND hWnd, UINT messg, WPARAM wParam, LPARAM lPara
 		case ID_EXIT:
 			//PlaySoundA((LPCSTR) "../../Sons/inicio.wav", NULL, SND_FILENAME | SND_ASYNC);
 			if (MessageBox(hWnd, TEXT("Deseja mesmo sair?"), TEXT("Sair"), MB_YESNO | MB_ICONEXCLAMATION) == IDYES) {
-				DeleteObject(hPI.JWallpaper);
-				DeleteObject(hPI.JBackground);
-				DeleteObject(hPI.JBarra);
-				DeleteObject(hPI.JBola);
-				DeleteObject(hPI.JBonus);
-				DeleteObject(hPI.JExplosao);
-				DeleteObject(hPI.JTijolo1);
-				DeleteObject(hPI.JTijolo2);
-				DeleteObject(hPI.JTijolo3);
-				DeleteObject(hPI.JTijolo4);
-				DeleteObject(hPI.JLVE);
-				DeleteObject(hPI.JLVD);
-				DeleteObject(hPI.JLH);
-				DeleteObject(hPI.JLogo);
-				DeleteObject(hPI.JVida);
-				DeleteObject(hPI.JGO);
-				DeleteDC(memdc);
-				PostQuitMessage(0);
+				encerra_cliente();
 			}
 			break;
 		}

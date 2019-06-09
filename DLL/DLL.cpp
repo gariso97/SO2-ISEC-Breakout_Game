@@ -14,15 +14,12 @@ TCHAR NomeFicheiroMapeadoBola[] = TEXT("Comunicação Bola");
 TCHAR NomeEventoBola[] = TEXT("Evento Bola");
 TCHAR NomeFicheiroMapeadoBarra[] = TEXT("Comunicação Barra");
 TCHAR NomeEventoBarra[] = TEXT("Evento Barra");
-TCHAR NomeEventoBrinde[] = TEXT("Evento Brinde");
-TCHAR NomeFicheiroMapeadoBrindes[] = TEXT("Comunicação Brindes");
 TCHAR NomeFicheiroMapeadoCliente[] = TEXT("Comunicação Cliente Unico");
 TCHAR MutexT[] = TEXT("Mutex");
 sinc s;
 FilesM fm;
 
 // funcoes da DLL
-
 cliente Login(cliente jog) {
 	cliente* pClienteLogin;
 
@@ -54,6 +51,9 @@ mapa  recebeJogo(mapa m) {		//funçao que recebe posiçao da bola ate o cliente 
 	m.pontos = pJogo->pontos;
 	m.vida = pJogo->vida;
 	m.n_elementos = pJogo->n_elementos;
+	m.brinde.existe = pJogo->brinde.existe;
+	m.brinde.tipo = pJogo->brinde.tipo;
+	m.brinde.pos = pJogo->brinde.pos;
 	for (int i = 0; i < m.n_elementos; i++)
 		m.tijolos[i] = pJogo->tijolos[i];
 	UnmapViewOfFile(pJogo);
@@ -99,25 +99,6 @@ cliente recebeMensagem(cliente cli) {
 
 	UnmapViewOfFile(pCliente);
 	return cli;
-}
-
-bonus recebeBrinde(bonus bon) {
-
-	bonus* pBrinde;
-
-	pBrinde = (bonus*)MapViewOfFile(fm.hMapFileBrinde, FILE_MAP_WRITE, 0, 0, sizeof(bonus));
-	if (pBrinde == NULL) {
-		MessageBox(hWnd, TEXT("Erro a mapear pBrinde..."), TEXT("ERROR"), MB_OK | MB_ICONERROR);
-		return bon;
-	}
-
-	//WaitForSingleObject(s.bEvent, INFINITE);
-	//bl.pos.x = pBola->pos.x;
-	//bl.pos.y = pBola->pos.y;
-	//bl.dim = pBola->dim;
-
-	UnmapViewOfFile(pBrinde);
-	return bon;
 }
 
 bola recebeBola(bola bl) {
@@ -239,13 +220,6 @@ int cria_ficheiros_mapeados_abertos() {
 	fm.hMapFileBarra = OpenFileMapping(FILE_MAP_ALL_ACCESS, FALSE, NomeFicheiroMapeadoBarra);
 	if (fm.hMapFileBarra == NULL) {
 		_stprintf_s(str, TEXT("Erro a criar pBarra %s na memoria partilhada!"), NomeFicheiroMapeadoBarra);
-		MessageBox(hWnd, str, TEXT("ERROR"), MB_OK | MB_ICONERROR);
-		return -1;
-	}
-
-	fm.hMapFileBrinde = OpenFileMapping(FILE_MAP_ALL_ACCESS, FALSE, NomeFicheiroMapeadoBrindes);
-	if (fm.hMapFileBrinde == NULL) {
-		_stprintf_s(str, TEXT("Erro a criar pBrinde %s na memoria partilhada!"), NomeFicheiroMapeadoBrindes);
 		MessageBox(hWnd, str, TEXT("ERROR"), MB_OK | MB_ICONERROR);
 		return -1;
 	}
