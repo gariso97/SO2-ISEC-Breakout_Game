@@ -45,8 +45,7 @@ typedef struct sincronizacao {
 }sinc;
 
 typedef struct Top10 {
-	TCHAR name[10];
-	int	pontuacao;
+	TCHAR jogador[TAM];
 }top10;
 
 typedef struct client {

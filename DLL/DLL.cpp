@@ -69,11 +69,13 @@ void  enviaMensagem(mensagem msg) {
 		MessageBox(hWnd, TEXT("Erro a mapear msg..."), TEXT("ERROR"), MB_OK | MB_ICONERROR);
 		return;
 	}
+
 	msgDLL->tecla = msg.tecla;
 	msgDLL->top = msg.top;
 	msgDLL->cliente_id = msg.cliente_id;
 	SetEvent(s.msgEvent);
 	ResetEvent(s.msgEvent);
+
 	UnmapViewOfFile(msgDLL);
 }
 
@@ -85,14 +87,12 @@ cliente recebeMensagem(cliente cli) {
 		MessageBox(hWnd, TEXT("Erro a mapear pCliente..."), TEXT("ERROR"), MB_OK | MB_ICONERROR);
 		return cli;
 	}
-
+	ReleaseMutex(s.Mutex);
 	WaitForSingleObject(s.Mutex, INFINITE);
 
 	cli.start = pCliente->start;
-	if (cli.id == pCliente->id) {
-		for (int i = 0; i < 10; i++) {
-			cli.top[i] = pCliente->top[i];
-		}
+	for (int i = 0; i < 10; i++) {
+		_tcscpy_s(cli.top[i].jogador, pCliente->top[i].jogador);
 	}
 	cli.id = pCliente->id;
 	ReleaseMutex(s.Mutex);

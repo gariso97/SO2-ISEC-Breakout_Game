@@ -9,7 +9,7 @@ int tempo_brinde_cai = 10;
 int flag_start = 0;
 
 //estruturas e vetores de estruturas
-cliente* vetor;
+cliente vetor[NUMBER_PLAYERS];
 threadsID tid;
 Hthread ht;
 FilesM fm;
@@ -136,13 +136,13 @@ void preenche_vetor(int id, TCHAR* nome) {
 	vetor[id].vidas = MAX_VIDAS;
 }
 
-void verificacao_nome(TCHAR *nome) {
+void verificacao_nome(TCHAR* nome) {
 	for (int i = 0; i < NUMBER_PLAYERS; i++)
 		if (_tcscmp(nome, vetor[i].nome) == 0) {
 			flag_start = 1;
 			return;
 		}
-	
+
 	bd.msg.cliente_id = id;
 	preenche_vetor(id, nome);
 	id++;
@@ -209,18 +209,17 @@ void definicoes_jogo_ficheiro(TCHAR* nomeFich) {
 	//_tprintf(TEXT("\n[INFO] Bar Alt: %d | Bar larg: %d | N_ele: %d | Tempo: %d\n"), bd.bar.dim.alt, bd.bar.dim.larg, bd.tab.n_elementos, tempo);
 }
 
-int CriaTopRegistry() {
+int busca_top() {
 	HKEY chave;
 	DWORD existe, tamanho;
-	TCHAR str[TAM], autor[TAM];
+	TCHAR str[TAM], autor[TAM], nome[TAM];
 
-	//Criar/abrir uma chave em HKEY_CURRENT_USER\Software\Tp_SO2
-	if (RegCreateKeyEx(HKEY_CURRENT_USER, TEXT("Software\\Tp_SO2"), 0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &chave, &existe) != ERROR_SUCCESS) {
+	//Criar/abrir uma chave em HKEY_CURRENT_USER\Software\ArkanoidISEC
+	if (RegCreateKeyEx(HKEY_CURRENT_USER, TEXT("Software\\ArkanoidISEC"), 0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &chave, &existe) != ERROR_SUCCESS) {
 		_tprintf(TEXT("Erro ao criar/abrir chave (%d)\n"), GetLastError());
 		return -1;
 	}
 	else {
-
 		if (existe == REG_CREATED_NEW_KEY) //Se a chave foi criada, inicializar os valores
 		{
 			for (int i = 1; i <= 10; i++) {
@@ -232,13 +231,18 @@ int CriaTopRegistry() {
 		}
 		//Se a chave foi aberta, ler os valores lá guardados
 		else if (existe == REG_OPENED_EXISTING_KEY) {
-
 			for (int i = 1; i <= 10; i++) {
 				_stprintf_s(str, TEXT("Top%d"), i);
 				tamanho = 20;
 				RegQueryValueEx(chave, str, NULL, NULL, (LPBYTE)autor, &tamanho);
-				if (tamanho > 0)
-					_tprintf(TEXT(" %s: %s\n"), str, autor);
+				if (tamanho > 0) {
+					if (bd.msg.top == 0) {
+						_tprintf(TEXT(" %s: %s\n"), str, autor);
+					}else if (bd.msg.top == 1) {
+						_stprintf_s(nome, TEXT("%s pontos"), autor);
+						_tcscpy_s(vetor[0].top[i-1].jogador, nome);
+					}
+				}
 			}
 		}
 		RegCloseKey(chave);
@@ -643,6 +647,9 @@ DWORD WINAPI ThreadEscutaMSG(LPVOID param) {
 		bd.msg.cliente_id = msg->cliente_id;
 		bd.msg.tecla = msg->tecla;
 		bd.msg.top = msg->top;
+		if (bd.msg.top == 1) {
+			busca_top();
+		}
 	} while (1);
 	UnmapViewOfFile(msg);
 	CloseHandle(fm.hMapFileCliente);
@@ -661,6 +668,7 @@ DWORD WINAPI ThreadEnviaMSG(LPVOID param) {
 
 	do {
 		WaitForSingleObject(s.Mutex, INFINITE);
+		Sleep(5);
 		if (flag_start == 1) {
 			pCliente->start = 0;
 			pCliente->id = -1;
@@ -669,15 +677,14 @@ DWORD WINAPI ThreadEnviaMSG(LPVOID param) {
 		else if(flag_start == 2) {
 			pCliente->start = 2;
 			pCliente->id = bd.msg.cliente_id;
+			bd.msg.top = 1;
 			flag_start = 0;
 		}
-		for (int i = 0; i < NUMBER_PLAYERS; i++) {
-			if (bd.msg.cliente_id == vetor[i].id) {
-				for (int j = 0; j < 10; j++) {
-					pCliente->top[j] = vetor[i].top[j];
-				}
-				pCliente->id = bd.msg.cliente_id;
+		if (bd.msg.top == 1) {
+			for (int j = 0; j < 10; j++) {
+				_tcscpy_s(pCliente->top[j].jogador, vetor[0].top[j].jogador);
 			}
+			bd.msg.top = 0;
 		}
 		ReleaseMutex(s.Mutex);
 	} while (1);
@@ -772,12 +779,6 @@ DWORD WINAPI ThreadBarra(LPVOID param) {
 	UnmapViewOfFile(pBarra);
 	CloseHandle(fm.hMapFileBarra);
 	return 0;
-}
-
-cliente* criaVetor(int tam) {
-	cliente* v;
-	v = (cliente*)malloc(sizeof(cliente) * tam);
-	return v;
 }
 
 void ListaJogadores() {
@@ -980,8 +981,6 @@ int _tmain(int argc, LPTSTR argv[]) {
 
 	srand(time(NULL));
 
-	vetor = criaVetor(NUMBER_PLAYERS);		//Alocar memoria para o numero maximo de clientes
-
 	cria_mapa();
 
 	//cria sincronizacao do server
@@ -1009,12 +1008,12 @@ int _tmain(int argc, LPTSTR argv[]) {
 			ListaJogadores();
 			break;
 		case'2':
-			CriaTopRegistry();
-			break;
-		case'3':
+			if (busca_top() == -1) {
+				_tprintf(TEXT("[AVISO] Ainda não existe nenhum TOP 10!\n"));
+			}
 			break;
 		default:
-			_tprintf(TEXT("Opção inválida!\n"));
+			_tprintf(TEXT("[ERRO] Opção inválida!\n"));
 			break;
 		}
 	} while (menu != '3');

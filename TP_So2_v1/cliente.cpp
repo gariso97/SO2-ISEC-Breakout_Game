@@ -247,7 +247,6 @@ BOOL CALLBACK TrataDlg(HWND hWnd, UINT messg, WPARAM wParam, LPARAM lParam) {
 }
 
 BOOL CALLBACK TrataDlg2(HWND hWnd, UINT messg, WPARAM wParam, LPARAM lParam) {
-	const TCHAR* str[] = { TEXT("João      100pts"), TEXT("Ana    50pts") };
 	TCHAR tecla[1];
 	switch (messg) {
 	case WM_CLOSE:
@@ -260,8 +259,8 @@ BOOL CALLBACK TrataDlg2(HWND hWnd, UINT messg, WPARAM wParam, LPARAM lParam) {
 		SetDlgItemText(hWnd, IDC_MOVD, tecla);
 		tecla[0] = t.bola_inicio;
 		SetDlgItemText(hWnd, IDC_LB, tecla);
-		for (int i = 0; i < 2; i++)
-			SendDlgItemMessage(hWnd, IDC_LIST2, LB_ADDSTRING, 0, (LPARAM)str[i]);
+		for (int i = 0; i < 10; i++)
+			SendDlgItemMessage(hWnd, IDC_LIST2, LB_ADDSTRING, 0, (LPARAM)jogador.top[i].jogador);
 		return TRUE;
 	case WM_COMMAND: //Tratar apenas para botões - é mais comum
 		switch (LOWORD(wParam)) {
@@ -365,6 +364,10 @@ LRESULT CALLBACK TrataEventos(HWND hWnd, UINT messg, WPARAM wParam, LPARAM lPara
 			}
 			break;
 		case ID_TOP10:
+			bd.msg.top = 1;
+			enviaMensagem(bd.msg);
+			jogador = recebeMensagem(jogador);
+			bd.msg.top = 0;
 			DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_DIALOG1), NULL, (DLGPROC)TrataDlg2); //Não Modal
 			break;
 		case ID_TECLA:
