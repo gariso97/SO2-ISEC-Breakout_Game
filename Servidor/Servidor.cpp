@@ -4,7 +4,8 @@
 int contador;
 int id = 0;
 int tempo = 5;				//milisegundos
-int tempo_de_bonus = 5000;	//milisegundos
+int tempo_de_bonus = 10000;	//milisegundos
+int tempo_brinde_cai = 10;
 int flag_start = 0;
 
 //estruturas e vetores de estruturas
@@ -22,13 +23,13 @@ DWORD WINAPI Divulga(LPVOID param) {
 	HANDLE* ptr = (HANDLE*)param;
 	DWORD n = 0;
 	do {
-		_tprintf(TEXT("[ESCRITOR] Frase: "));
+		_tprintf(TEXT("[Servidor] Frase: "));
 		_fgetts(buf, 256, stdin);
 		buf[_tcslen(buf) - 1] = '\0';
 		for (int j = 0; j < NLEITORES; j++)
 			if (ptr[j] != INVALID_HANDLE_VALUE && !WriteFile(ptr[j], buf, _tcslen(buf) * sizeof(TCHAR), &n, NULL)) {
 				_tprintf(TEXT("[ERRO] Escrever no pipe! (WriteFile)\n"));
-				_tprintf(TEXT("[ESCRITOR] Desligar o pipe (DisconnectNamedPipe)\n"));
+				_tprintf(TEXT("[Servidor] Desligar o pipe (DisconnectNamedPipe)\n"));
 				if (!DisconnectNamedPipe(ptr[j])) {
 					_tprintf(TEXT("[ERRO] Desligar o pipe! (DisconnectNamedPipe)"));
 					exit(-1);
@@ -37,7 +38,7 @@ DWORD WINAPI Divulga(LPVOID param) {
 				ptr[j] = INVALID_HANDLE_VALUE;
 				contador--;
 			}
-		_tprintf(TEXT("[ESCRITOR] Enviei %d bytes aos leitores... (WriteFile)\n"), n);
+		_tprintf(TEXT("[Servidor] Enviei %d bytes aos leitores... (WriteFile)\n"), n);
 	} while (_tcscmp(buf, TEXT("fim")));
 	return 0;
 }
@@ -97,28 +98,28 @@ DWORD WINAPI ThreadRecebePipe(LPVOID param) {
 	BOOL ret;
 	DWORD n;
 
-	_tprintf(TEXT("[LEITOR] Esperar pelo pipe '%s' (WaitNamedPipe)\n"), PIPE_NAME);
+	_tprintf(TEXT("\n[Servidor] Esperar pelo pipe '%s' (WaitNamedPipe)\n"), PIPE_NAME);
 	if (!WaitNamedPipe(PIPE_NAME, NMPWAIT_WAIT_FOREVER)) {
 		_tprintf(TEXT("[ERRO] Ligar ao pipe '%s'! (WaitNamedPipe)\n"), PIPE_NAME);
 		exit(-1);
 	}
-	_tprintf(TEXT("[LEITOR] Ligação ao pipe do escritor... (CreateFile)\n"));
+	_tprintf(TEXT("[Servidor] Ligação ao pipe do escritor... (CreateFile)\n"));
 	hPipe = CreateFile(PIPE_NAME, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 	if (hPipe == NULL) {
 		_tprintf(TEXT("[ERRO] Ligar ao pipe '%s'! (CreateFile)\n"), PIPE_NAME);
 		exit(-1);
 	}
-	_tprintf(TEXT("[LEITOR] Liguei-me...\n"));
+	_tprintf(TEXT("[Servidor] Liguei-me...\n"));
 
 	while (1)
 	{
 		ret = ReadFile(hPipe, buf, sizeof(buf), &n, NULL);
 		buf[n / sizeof(TCHAR)] = '\0';
 		if (!ret || !n) {
-			_tprintf(TEXT("[LEITOR] %d %d... (ReadFile)\n"), ret, n);
+			_tprintf(TEXT("[Servidor] %d %d... (ReadFile)\n"), ret, n);
 			break;
 		}
-		_tprintf(TEXT("[LEITOR] Recebi %d bytes: '%s'... (ReadFile)\n"), n, buf);
+		_tprintf(TEXT("[Servidor] Recebi %d bytes: '%s'... (ReadFile)\n"), n, buf);
 	}
 	CloseHandle(hPipe);
 	Sleep(200);
@@ -246,23 +247,20 @@ int CriaTopRegistry() {
 }
 
 void cria_mapa() {
-	int tipoRand;
+	int tipoRand = 0;
 	int x = 5, y = 5;
-	int aux = 16, aux2 = 0;
+	int aux = 16;
 	for (int i = 0; i < bd.tab.n_elementos; i++) {
 		if (i == aux) {
 			y = y + bd.tab.tijolos[i - 1].dim.alt;
 			x = 5;
-			aux = aux + 16;// -aux2;
-			/*if(aux2 < 5)
-				aux2++;*/
+			aux = aux + 16;
 		}
-		tipoRand = 0;
 		bd.tab.tijolos[i].id = i;
 		tipoRand = rand() % 4;
 		bd.tab.tijolos[i].tipo = tipoRand;
-		tipoRand = rand() % 1;
-		bd.tab.tijolos[i].bonus = 1;
+		tipoRand = rand() % 2;
+		bd.tab.tijolos[i].bonus = tipoRand;
 
 		bd.tab.tijolos[i].dim.larg = 50;
 		bd.tab.tijolos[i].pos.x = x;
@@ -270,7 +268,12 @@ void cria_mapa() {
 
 		bd.tab.tijolos[i].pos.y = y;
 		bd.tab.tijolos[i].dim.alt = 25;
-		bd.tab.tijolos[i].vida = 1;
+		if (bd.tab.tijolos[i].tipo == 0) {
+			bd.tab.tijolos[i].vida = 2;
+		}
+		else {
+			bd.tab.tijolos[i].vida = 1;
+		}
 	}
 }
 
@@ -279,16 +282,16 @@ void cria_bonus(posicao pos) {
 	if (bd.tab.brinde.existe == 0) {
 		bd.tab.brinde.pos.x = pos.x + 25;
 		bd.tab.brinde.pos.y = pos.y + 25;
-		tipo = rand() % 2;
+		tipo = rand() % 3;
 		bd.tab.brinde.tipo = tipo;
 		bd.tab.brinde.existe = 1;
 	}
 }
 
 void valida_bonus() {
-	if(bd.tab.brinde.existe == 1) {
-		bd.tab.brinde.pos.y--;
-		if (bd.tab.brinde.pos.x >= bd.bar.pos.x && (bd.tab.brinde.pos.x <= bd.bar.pos.x + bd.bar.dim.larg) 
+	if (bd.tab.brinde.existe == 1) {
+		bd.tab.brinde.pos.y++;
+		if (bd.tab.brinde.pos.x >= bd.bar.pos.x && (bd.tab.brinde.pos.x <= bd.bar.pos.x + bd.bar.dim.larg)
 			&& bd.tab.brinde.pos.y >= bd.bar.pos.y && (bd.tab.brinde.pos.y <= bd.bar.pos.y + bd.bar.dim.alt)) {
 			if (bd.tab.brinde.tipo == 2) {
 				if (bd.tab.vida < 4) {
@@ -304,7 +307,7 @@ void valida_bonus() {
 			bd.tab.brinde.existe = -1;
 			return;
 		}
-		if (bd.tab.brinde.pos.y < DIMMAPA_Y - 10)
+		if (bd.tab.brinde.pos.y > DIMMAPA_Y - 10)
 			bd.tab.brinde.existe = 0;
 	}
 }
@@ -315,7 +318,7 @@ void valida_pos_bola() {
 
 	//verificacoes se ganhou o jogo
 	for (int i = 0; i < bd.tab.n_elementos; i++) {
-		if (bd.tab.tijolos[i].vida != 0) {
+		if (bd.tab.tijolos[i].vida > 0) {
 			ganhou = 0;
 			break;
 		}
@@ -340,7 +343,7 @@ void valida_pos_bola() {
 					bd.b.pos.y += bd.b.velocidade;
 					bd.b.pos.x += bd.b.velocidade;
 					bd.tab.tijolos[i].vida--;
-					if (bd.tab.tijolos[i].bonus == 1) {
+					if (bd.tab.tijolos[i].bonus == 1 && bd.tab.tijolos[i].vida == 0) {
 						cria_bonus(bd.tab.tijolos[i].pos);
 					}
 					return;
@@ -352,7 +355,7 @@ void valida_pos_bola() {
 					bd.b.pos.y -= bd.b.velocidade;
 					bd.b.pos.x -= bd.b.velocidade;
 					bd.tab.tijolos[i].vida--;
-					if (bd.tab.tijolos[i].bonus == 1) {
+					if (bd.tab.tijolos[i].bonus == 1 && bd.tab.tijolos[i].vida == 0) {
 						cria_bonus(bd.tab.tijolos[i].pos);
 					}
 					return;
@@ -387,7 +390,7 @@ void valida_pos_bola() {
 					bd.b.pos.y += bd.b.velocidade;
 					bd.b.pos.x -= bd.b.velocidade;
 					bd.tab.tijolos[i].vida--;
-					if (bd.tab.tijolos[i].bonus == 1) {
+					if (bd.tab.tijolos[i].bonus == 1 && bd.tab.tijolos[i].vida == 0) {
 						cria_bonus(bd.tab.tijolos[i].pos);
 					}
 					return;
@@ -399,7 +402,7 @@ void valida_pos_bola() {
 					bd.b.pos.y -= bd.b.velocidade;
 					bd.b.pos.x += bd.b.velocidade;
 					bd.tab.tijolos[i].vida--;
-					if (bd.tab.tijolos[i].bonus == 1) {
+					if (bd.tab.tijolos[i].bonus == 1 && bd.tab.tijolos[i].vida == 0) {
 						cria_bonus(bd.tab.tijolos[i].pos);
 					}
 					return;
@@ -441,7 +444,7 @@ void valida_pos_bola() {
 					bd.b.pos.y -= bd.b.velocidade;
 					bd.b.pos.x += bd.b.velocidade;
 					bd.tab.tijolos[i].vida--;
-					if (bd.tab.tijolos[i].bonus == 1) {
+					if (bd.tab.tijolos[i].bonus == 1 && bd.tab.tijolos[i].vida == 0) {
 						cria_bonus(bd.tab.tijolos[i].pos);
 					}
 					return;
@@ -453,7 +456,7 @@ void valida_pos_bola() {
 					bd.b.pos.y += bd.b.velocidade;
 					bd.b.pos.x -= bd.b.velocidade;
 					bd.tab.tijolos[i].vida--;
-					if (bd.tab.tijolos[i].bonus == 1) {
+					if (bd.tab.tijolos[i].bonus == 1 && bd.tab.tijolos[i].vida == 0) {
 						cria_bonus(bd.tab.tijolos[i].pos);
 					}
 					return;
@@ -508,7 +511,7 @@ void valida_pos_bola() {
 					bd.b.pos.y -= bd.b.velocidade;
 					bd.b.pos.x -= bd.b.velocidade;
 					bd.tab.tijolos[i].vida--;
-					if (bd.tab.tijolos[i].bonus == 1) {
+					if (bd.tab.tijolos[i].bonus == 1 && bd.tab.tijolos[i].vida == 0) {
 						cria_bonus(bd.tab.tijolos[i].pos);
 					}
 					return;
@@ -520,7 +523,7 @@ void valida_pos_bola() {
 					bd.b.pos.y += bd.b.velocidade;
 					bd.b.pos.x += bd.b.velocidade;
 					bd.tab.tijolos[i].vida--;
-					if (bd.tab.tijolos[i].bonus == 1) {
+					if (bd.tab.tijolos[i].bonus == 1 && bd.tab.tijolos[i].vida == 0) {
 						cria_bonus(bd.tab.tijolos[i].pos);
 					}
 					return;
@@ -574,6 +577,10 @@ void reinicia_jogo() {
 	definicoes_jogo();
 	vetor[0].vidas = MAX_VIDAS;
 	vetor[0].pontos = 0;
+	bd.tab.brinde.existe = 0;
+	bd.tab.vida = MAX_VIDAS;
+	bd.tab.pontos = 0;
+	bd.tab.brinde.existe = 0;
 }
 
 DWORD WINAPI ThreadLogin(LPVOID param) {                                //função da thread que recebe o username do cliente
@@ -695,7 +702,7 @@ void ThreadBrindes() {
 			}
 			bd.tab.brinde.existe = 0;
 		}
-		Sleep(tempo);
+		Sleep(tempo_brinde_cai);
 	} while (1);
 }
 

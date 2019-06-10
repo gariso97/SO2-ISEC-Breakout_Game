@@ -11,6 +11,7 @@ tecla t;
 
 //variaveis e handles
 TCHAR szProgName[] = TEXT("Base");
+HANDLE HMusicaInicio;
 HINSTANCE hInstanceGlobal;
 HDC memdc;
 
@@ -18,8 +19,10 @@ HDC memdc;
 
 void carregaBitMaps() {
 	bipMaps.Barra = (HBITMAP)LoadImage(NULL, TEXT("../../Imagens/barra.bmp"), IMAGE_BITMAP, 70, 50, LR_LOADFROMFILE);
+	bipMaps.Barra_larga = (HBITMAP)LoadImage(NULL, TEXT("../../Imagens/barra.bmp"), IMAGE_BITMAP, 90, 50, LR_LOADFROMFILE);
 	bipMaps.Explosao = (HBITMAP)LoadImage(NULL, TEXT("../../Imagens/explosao.bmp"), IMAGE_BITMAP, 40, 40, LR_LOADFROMFILE);
 	bipMaps.Tijolo1 = (HBITMAP)LoadImage(NULL, TEXT("../../Imagens/tijolo1.bmp"), IMAGE_BITMAP, 50, 25, LR_LOADFROMFILE);
+	bipMaps.Quebra = (HBITMAP)LoadImage(NULL, TEXT("../../Imagens/tijolo1quebra.bmp"), IMAGE_BITMAP, 50, 25, LR_LOADFROMFILE);
 	bipMaps.Tijolo2 = (HBITMAP)LoadImage(NULL, TEXT("../../Imagens/tijolo2.bmp"), IMAGE_BITMAP, 50, 25, LR_LOADFROMFILE);
 	bipMaps.Tijolo3 = (HBITMAP)LoadImage(NULL, TEXT("../../Imagens/tijolo3.bmp"), IMAGE_BITMAP, 50, 25, LR_LOADFROMFILE);
 	bipMaps.Tijolo4 = (HBITMAP)LoadImage(NULL, TEXT("../../Imagens/tijolo4.bmp"), IMAGE_BITMAP, 50, 25, LR_LOADFROMFILE);
@@ -33,9 +36,10 @@ void carregaBitMaps() {
 	bipMaps.logo = (HBITMAP)LoadImage(NULL, TEXT("../../Imagens/logo.bmp"), IMAGE_BITMAP, 150, 70, LR_LOADFROMFILE);
 	bipMaps.vida = (HBITMAP)LoadImage(NULL, TEXT("../../Imagens/vida.bmp"), IMAGE_BITMAP, 40, 50, LR_LOADFROMFILE);
 	bipMaps.go = (HBITMAP)LoadImage(NULL, TEXT("../../Imagens/gameOver.bmp"), IMAGE_BITMAP, 400, 400, LR_LOADFROMFILE);
+	bipMaps.win = (HBITMAP)LoadImage(NULL, TEXT("../../Imagens/win.bmp"), IMAGE_BITMAP, 400, 400, LR_LOADFROMFILE);
 	bipMaps.bonus1 = (HBITMAP)LoadImage(NULL, TEXT("../../Imagens/bonus1.bmp"), IMAGE_BITMAP, 40, 40, LR_LOADFROMFILE);
-	bipMaps.bonus2 = (HBITMAP)LoadImage(NULL, TEXT("../../Imagens/bonus2.bmp"), IMAGE_BITMAP, 40, 40, LR_LOADFROMFILE);
-	bipMaps.bonus3 = (HBITMAP)LoadImage(NULL, TEXT("../../Imagens/bonus3.bmp"), IMAGE_BITMAP, 40, 40, LR_LOADFROMFILE);
+	bipMaps.bonus2 = (HBITMAP)LoadImage(NULL, TEXT("../../Imagens/bonus2.bmp"), IMAGE_BITMAP, 40, 20, LR_LOADFROMFILE);
+	bipMaps.bonus3 = (HBITMAP)LoadImage(NULL, TEXT("../../Imagens/vida.bmp"), IMAGE_BITMAP, 30, 30, LR_LOADFROMFILE);
 
 }
 
@@ -43,10 +47,12 @@ void encerra_cliente() {
 	DeleteObject(hPI.JWallpaper);
 	DeleteObject(hPI.JBackground);
 	DeleteObject(hPI.JBarra);
+	DeleteObject(hPI.JBarraLarga);
 	DeleteObject(hPI.JBola);
 	DeleteObject(hPI.JBonus);
 	DeleteObject(hPI.JExplosao);
 	DeleteObject(hPI.JTijolo1);
+	DeleteObject(hPI.JQuebra);
 	DeleteObject(hPI.JTijolo2);
 	DeleteObject(hPI.JTijolo3);
 	DeleteObject(hPI.JTijolo4);
@@ -56,11 +62,19 @@ void encerra_cliente() {
 	DeleteObject(hPI.JLogo);
 	DeleteObject(hPI.JVida);
 	DeleteObject(hPI.JGO);
+	DeleteObject(hPI.JWIN);
 	DeleteObject(hPI.JBonus1);
 	DeleteObject(hPI.JBonus2);
 	DeleteObject(hPI.JBonus3);
 	DeleteDC(memdc);
 	exit(0);
+}
+
+void musicaInicial() {
+	do {
+		PlaySoundA((LPCSTR) "../../Sons/fundo.wav", NULL, SND_FILENAME | SND_ASYNC);
+		Sleep(16000);	//duracao da musica
+	} while (1);
 }
 
 DWORD WINAPI escutaPacote(LPVOID param) {
@@ -88,7 +102,10 @@ DWORD WINAPI escutaPacote(LPVOID param) {
 				}
 				else if (bd.tab.tijolos[i].vida > 0) {
 					if (bd.tab.tijolos[i].tipo == 0) {
-						TransparentBlt(memdc, bd.tab.tijolos[i].pos.x, bd.tab.tijolos[i].pos.y, 50, 25, hPI.JTijolo1, 0, 0, 50, 25, RGB(255, 255, 255));
+						if(bd.tab.tijolos[i].vida == 2)
+							TransparentBlt(memdc, bd.tab.tijolos[i].pos.x, bd.tab.tijolos[i].pos.y, 50, 25, hPI.JTijolo1, 0, 0, 50, 25, RGB(255, 255, 255));
+						else
+							TransparentBlt(memdc, bd.tab.tijolos[i].pos.x, bd.tab.tijolos[i].pos.y, 50, 25, hPI.JQuebra, 0, 0, 50, 25, RGB(255, 255, 255));
 					}
 					else if (bd.tab.tijolos[i].tipo == 1) {
 						TransparentBlt(memdc, bd.tab.tijolos[i].pos.x, bd.tab.tijolos[i].pos.y, 50, 25, hPI.JTijolo2, 0, 0, 50, 25, RGB(255, 255, 255));
@@ -107,10 +124,10 @@ DWORD WINAPI escutaPacote(LPVOID param) {
 					TransparentBlt(memdc, bd.tab.brinde.pos.x-20, bd.tab.brinde.pos.y-20, 40, 40, hPI.JBonus1, 0, 0, 40, 40, RGB(255, 255, 255));
 				}
 				else if (bd.tab.brinde.tipo == 1) {
-					TransparentBlt(memdc, bd.tab.brinde.pos.x-20, bd.tab.brinde.pos.y-20, 40, 40, hPI.JBonus2, 0, 0, 40, 40, RGB(255, 255, 255));
+					TransparentBlt(memdc, bd.tab.brinde.pos.x-20, bd.tab.brinde.pos.y-10, 40, 20, hPI.JBonus2, 0, 0, 40, 20, RGB(255, 255, 255));
 				}
 				else {
-					TransparentBlt(memdc, bd.tab.brinde.pos.x-20, bd.tab.brinde.pos.y-20, 40, 40, hPI.JBonus3, 0, 0, 40, 40, RGB(255, 255, 255));
+					TransparentBlt(memdc, bd.tab.brinde.pos.x-15, bd.tab.brinde.pos.y-15, 30, 30, hPI.JBonus3, 0, 0, 30, 30, RGB(255, 255, 255));
 				}
 			}
 			TransparentBlt(memdc, bd.bar.pos.x, bd.bar.pos.y - 5, 70, 50, hPI.JBarra, 0, 0, 70, 50, RGB(255, 255, 255));
@@ -119,28 +136,54 @@ DWORD WINAPI escutaPacote(LPVOID param) {
 			TransparentBlt(memdc, DIMMAPA_X + 1, 0, 10, DIMMAPA_Y + 10, hPI.JLVD, 0, 0, 10, DIMMAPA_Y + 10, RGB(255, 255, 255));	//limite direito
 			TransparentBlt(memdc, 0, 0, DIMMAPA_X + 10, 10, hPI.JLH, 0, 0, DIMMAPA_X + 10, 10, RGB(255, 255, 255));	//limite cima
 			TransparentBlt(memdc, DIMMAPA_X + 12, 0, 150, 70, hPI.JLogo, 0, 0, 150, 70, RGB(255, 255, 255));	//logo
+			SelectObject(memdc, GetStockObject(WHITE_BRUSH));
+			Rectangle(memdc, DIMMAPA_X+15, 200, DIMMAPA_X + 180, 260);
 			_stprintf_s(str, TEXT("Jogador: %s"), jogador.nome);
 			TextOut(memdc, DIMMAPA_X + 20, 210, (LPCWSTR)str, _tcslen(str));
 			_stprintf_s(str, TEXT("Pontos: %d"), bd.tab.pontos);
 			TextOut(memdc, DIMMAPA_X + 20, 230, (LPCWSTR)str, _tcslen(str));
+			_stprintf_s(str, TEXT("Bonus:"));
+			TextOut(memdc, DIMMAPA_X + 20, 350, (LPCWSTR)str, _tcslen(str));
+			if (bd.tab.brinde.existe == -1) {
+				if (bd.tab.brinde.tipo == 0) {
+					TransparentBlt(memdc, DIMMAPA_X + 80, 350, 40, 40, hPI.JBonus1, 0, 0, 40, 40, RGB(255, 255, 255));
+				}
+				else if (bd.tab.brinde.tipo == 1) {
+					TransparentBlt(memdc, DIMMAPA_X + 80, 350, 40, 20, hPI.JBonus2, 0, 0, 40, 20, RGB(255, 255, 255));
+				}
+				else {
+					TransparentBlt(memdc, DIMMAPA_X + 80, 350, 30, 30, hPI.JBonus3, 0, 0, 30, 30, RGB(255, 255, 255));
+				}
+			}
 			aux = 0;
 			for (int i = 0; i < bd.tab.vida; i++) {
 				TransparentBlt(memdc, DIMMAPA_X + 15 + aux, DIMMAPA_Y - 50, 40, 50, hPI.JVida, 0, 0, 40, 50, RGB(255, 255, 255));	//vida
 				aux += 30;
 			}
+			if (bd.tab.alteracoes == 2) {
+				PlaySoundA((LPCSTR) "../../Sons/win_final.wav", NULL, SND_FILENAME | SND_ASYNC);
+				TransparentBlt(memdc, 200, 100, 400, 400, hPI.JWIN, 0, 0, 400, 400, RGB(255, 255, 255));
+			}
+			else if (bd.tab.alteracoes == 3) {
+				PlaySoundA((LPCSTR) "../../Sons/gameOver.wav", NULL, SND_FILENAME | SND_ASYNC);
+				TransparentBlt(memdc, 200, 100, 400, 400, hPI.JGO, 0, 0, 400, 400, RGB(255, 255, 255));
+			}
+
 			//Imprime Barra
-			TransparentBlt(memdc, bd.bar.pos.x, bd.bar.pos.y - 5, 70, 50, hPI.JBarra, 0, 0, 70, 50, RGB(255, 255, 255));
+			if (bd.bar.dim.larg == 70) {
+				TransparentBlt(memdc, bd.bar.pos.x, bd.bar.pos.y - 5, 70, 50, hPI.JBarra, 0, 0, 70, 50, RGB(255, 255, 255));
+			}
+			else {
+				TransparentBlt(memdc, bd.bar.pos.x, bd.bar.pos.y - 5, 90, 50, hPI.JBarraLarga, 0, 0, 90, 50, RGB(255, 255, 255));
+			}
 			//Imprime bola
 			TransparentBlt(memdc, bd.b.pos.x, bd.b.pos.y, 15, 15, hPI.JBola, 0, 0, 15, 15, RGB(255, 255, 255));
 
 			InvalidateRect(hWnd, NULL, 0);
-			//O NULL do invalidrect representa o retangulo que vai ser desenhado e é so preciso mudar o bit blt nas coordenadas a desenhar
-			
 			if (bd.tab.alteracoes == 1) {
 				PlaySoundA((LPCSTR) "../../Sons/perdeu.wav", NULL, SND_FILENAME | SND_ASYNC);
 			}
 			if (bd.tab.alteracoes == 2) {
-				PlaySoundA((LPCSTR) "../../Sons/fundo.wav", NULL, SND_FILENAME | SND_ASYNC);
 				if (MessageBox(hWnd, TEXT("GANHOU o jogo!!\nDeseja começar de novo?"), TEXT("Vitória"), MB_YESNO | MB_ICONINFORMATION | MB_APPLMODAL) == IDYES) {
 					bd.msg.tecla = 's';
 					enviaMensagem(bd.msg);
@@ -149,10 +192,7 @@ DWORD WINAPI escutaPacote(LPVOID param) {
 				else {
 					encerra_cliente();
 				}
-			}
-			else if (bd.tab.alteracoes == 3) {
-				TransparentBlt(memdc, 200, 100, 400, 400, hPI.JGO, 0, 0, 400, 400, RGB(255, 255, 255));
-				PlaySoundA((LPCSTR) "../../Sons/gameOver.wav", NULL, SND_FILENAME | SND_ASYNC);
+			}else if (bd.tab.alteracoes == 3) {
 				if (MessageBox(hWnd, TEXT("PERDEU o jogo!!\nDeseja começar de novo?"), TEXT("Derrota"), MB_YESNO | MB_ICONINFORMATION | MB_APPLMODAL) == IDYES) {
 					bd.msg.tecla = 's';
 					enviaMensagem(bd.msg);
@@ -189,6 +229,7 @@ BOOL CALLBACK TrataDlg(HWND hWnd, UINT messg, WPARAM wParam, LPARAM lParam) {
 				MessageBox(hWnd, TEXT("Login efetuado com sucesso!!\n Prepar-se! O jogo vai iniciar..."), TEXT("Login Sucesso"), MB_OK);
 				EndDialog(hWnd, 0);
 				jogador.start = 1;
+				SuspendThread(HMusicaInicio);
 				return TRUE;
 			}
 			else {
@@ -210,8 +251,8 @@ BOOL CALLBACK TrataDlg2(HWND hWnd, UINT messg, WPARAM wParam, LPARAM lParam) {
 	TCHAR tecla[1];
 	switch (messg) {
 	case WM_CLOSE:
-		EndDialog(hWnd, 0); //Fechar a caixa de diálogo atual
-		return TRUE; //Tratei o evento da caixa de diálogo
+		EndDialog(hWnd, 0);
+		return TRUE;
 	case WM_INITDIALOG:
 		tecla[0] = t.esquerda;
 		SetDlgItemText(hWnd, IDC_MOVE, tecla);
@@ -249,13 +290,11 @@ LRESULT CALLBACK TrataEventos(HWND hWnd, UINT messg, WPARAM wParam, LPARAM lPara
 
 	switch (messg) {
 	case WM_CLOSE:
-		//PlaySoundA((LPCSTR) "../../Sons/inicio.wav", NULL, SND_FILENAME | SND_ASYNC);
 		if (MessageBox(hWnd, TEXT("Deseja mesmo sair?"), TEXT("Sair"), MB_YESNO | MB_ICONEXCLAMATION) == IDYES) {
 			encerra_cliente();
 		}
 		break;
 	case WM_CREATE:
-		////Acontece uma vez, na criação da janela
 		hdc = GetDC(hWnd);
 		memdc = CreateCompatibleDC(hdc);
 		screenshot = CreateCompatibleBitmap(hdc, DIMMAPA_X + 200, DIMMAPA_Y + 100);
@@ -269,16 +308,19 @@ LRESULT CALLBACK TrataEventos(HWND hWnd, UINT messg, WPARAM wParam, LPARAM lPara
 		hPI.JBonus = CreateCompatibleDC(memdc);
 		hPI.JExplosao = CreateCompatibleDC(memdc);
 		hPI.JTijolo1 = CreateCompatibleDC(memdc);
+		hPI.JQuebra = CreateCompatibleDC(memdc);
 		hPI.JTijolo2 = CreateCompatibleDC(memdc);
 		hPI.JTijolo3 = CreateCompatibleDC(memdc);
 		hPI.JTijolo4 = CreateCompatibleDC(memdc);
 		hPI.JBarra = CreateCompatibleDC(memdc);
+		hPI.JBarraLarga = CreateCompatibleDC(memdc);
 		hPI.JLVE = CreateCompatibleDC(memdc);
 		hPI.JLVD = CreateCompatibleDC(memdc);
 		hPI.JLH = CreateCompatibleDC(memdc);
 		hPI.JLogo = CreateCompatibleDC(memdc);
 		hPI.JVida = CreateCompatibleDC(memdc);
 		hPI.JGO = CreateCompatibleDC(memdc);
+		hPI.JWIN = CreateCompatibleDC(memdc);
 		hPI.JBonus1 = CreateCompatibleDC(memdc);
 		hPI.JBonus2 = CreateCompatibleDC(memdc);
 		hPI.JBonus3 = CreateCompatibleDC(memdc);
@@ -290,7 +332,9 @@ LRESULT CALLBACK TrataEventos(HWND hWnd, UINT messg, WPARAM wParam, LPARAM lPara
 		SelectObject(hPI.JBonus, bipMaps.Bonus);
 		SelectObject(hPI.JExplosao, bipMaps.Explosao);
 		SelectObject(hPI.JBarra, bipMaps.Barra);
+		SelectObject(hPI.JBarraLarga, bipMaps.Barra_larga);
 		SelectObject(hPI.JTijolo1, bipMaps.Tijolo1);
+		SelectObject(hPI.JQuebra, bipMaps.Quebra);
 		SelectObject(hPI.JTijolo2, bipMaps.Tijolo2);
 		SelectObject(hPI.JTijolo3, bipMaps.Tijolo3);
 		SelectObject(hPI.JTijolo4, bipMaps.Tijolo4);
@@ -300,6 +344,7 @@ LRESULT CALLBACK TrataEventos(HWND hWnd, UINT messg, WPARAM wParam, LPARAM lPara
 		SelectObject(hPI.JLogo, bipMaps.logo);
 		SelectObject(hPI.JVida, bipMaps.vida);
 		SelectObject(hPI.JGO, bipMaps.go);
+		SelectObject(hPI.JWIN, bipMaps.win);
 		SelectObject(hPI.JBonus1, bipMaps.bonus1);
 		SelectObject(hPI.JBonus2, bipMaps.bonus2);
 		SelectObject(hPI.JBonus3, bipMaps.bonus3);
@@ -325,6 +370,9 @@ LRESULT CALLBACK TrataEventos(HWND hWnd, UINT messg, WPARAM wParam, LPARAM lPara
 		case ID_TECLA:
 			DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_DIALOG4), NULL, (DLGPROC)TrataDlg2); //Não Modal
 			break;
+		case ID_INFO:
+			DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_DIALOG5), NULL, (DLGPROC)TrataDlg2); //Não Modal
+			break;
 		case ID_NOVOJOGO:
 			if (jogador.start == 1) {
 				if (MessageBox(hWnd, TEXT("Deseja mesmo reiniciar o jogo?"), TEXT("Reiniciar Jogo"), MB_YESNO | MB_ICONQUESTION) == IDYES) {
@@ -335,7 +383,6 @@ LRESULT CALLBACK TrataEventos(HWND hWnd, UINT messg, WPARAM wParam, LPARAM lPara
 			}
 			break;
 		case ID_EXIT:
-			//PlaySoundA((LPCSTR) "../../Sons/inicio.wav", NULL, SND_FILENAME | SND_ASYNC);
 			if (MessageBox(hWnd, TEXT("Deseja mesmo sair?"), TEXT("Sair"), MB_YESNO | MB_ICONEXCLAMATION) == IDYES) {
 				encerra_cliente();
 			}
@@ -448,7 +495,12 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR lpCmdLine, int nC
 
 	BitBlt(memdc, 0, 0, DIMMAPA_X + 200, DIMMAPA_Y, hPI.JWallpaper, 0, 0, SRCCOPY);
 	InvalidateRect(hWnd, NULL, 0);
-	//PlaySoundA((LPCSTR) "../../Sons/inicio.wav", NULL, SND_FILENAME | SND_ASYNC);
+	DWORD IDMusicaInicial;
+	HMusicaInicio = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)musicaInicial, NULL, 0, &IDMusicaInicial);
+	if (HEscutaPacote == NULL) {
+		MessageBox(hWnd, TEXT("[ERRO] Criação da Thread para escuta de pacotes..."), TEXT("ERROR"), MB_OK | MB_ICONWARNING);
+		return -1;
+	}
 
 	while (GetMessage(&lpMsg, NULL, 0, 0)) {
 		TranslateMessage(&lpMsg);

@@ -13,6 +13,7 @@
 #define IDB_BITMAP3                     114
 #define IDB_BITMAP4                     115
 #define IDD_DIALOG4                     116
+#define IDD_DIALOG5                     118
 #define IDC_LIST2                       1002
 #define IDC_EDIT1                       1003
 #define IDC_IPADDRESS1                  1005
@@ -21,6 +22,7 @@
 #define IDC_MOVD                        1009
 #define IDOKCONFIG                      1011
 #define IDC_LB                          1012
+#define IDVIDA                          1020
 #define ID_LOGIN_LOCAL                  40001
 #define ID_LOGIN_REMOTO                 40002
 #define ID_TOP10                        40003
@@ -30,14 +32,20 @@
 #define ID_EXIT40007                    40007
 #define ID_TECLA                        40008
 #define ID_NOVOJOGO                     40009
+#define ID_CONFIGURA40010               40010
+#define ID_CONFIGURA40011               40011
+#define ID_CONFIGURA40012               40012
+#define ID_CONFIGURA40013               40013
+#define ID_REGRAS                       40014
+#define ID_INFO                         40015
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        118
-#define _APS_NEXT_COMMAND_VALUE         40010
-#define _APS_NEXT_CONTROL_VALUE         1013
+#define _APS_NEXT_RESOURCE_VALUE        120
+#define _APS_NEXT_COMMAND_VALUE         40016
+#define _APS_NEXT_CONTROL_VALUE         1021
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
